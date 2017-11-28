@@ -1,16 +1,14 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import numpy as np
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import os
 
 def discriminator(x,c):
     with tf.name_scope('discriminator'):
-        W_fc1 = weight_variable([x.shape[1]+c.shape[1], 128])
-        b_fc1 = bias_variable([128])
-        W_fc2 = weight_variable([128, 1])
-        b_fc2 = bias_variable([1])
         x_context = tf.concat([x,c],1)
         h_fc1 = tf.nn.relu(tf.matmul(x_context,W_fc1) + b_fc1)
         logits = tf.matmul(h_fc1,W_fc2) + b_fc2
@@ -19,18 +17,16 @@ def discriminator(x,c):
 
 def generator(z,c):
     with tf.name_scope('generator'):
-        W_fc1 = weight_variable([z.shape[1]+c.shape[1], 128])
-        b_fc1 = bias_variable([128])
-        W_fc2 = weight_variable([128,784])
-        b_fc2 = bias_variable([784])
         z_context = tf.concat([z,c],1)
-        h_fc1 = tf.nn.relu(tf.matmul(z_context,W_fc1) + b_fc1)
-        h_fc2 = tf.matmul(h_fc1,W_fc2) + b_fc2
-        prob = tf.nn.sigmoid(h_fc2)
+        h_fc3 = tf.nn.relu(tf.matmul(z_context,W_fc3) + b_fc3)
+        h_fc4 = tf.matmul(h_fc3,W_fc4) + b_fc4
+        prob = tf.nn.sigmoid(h_fc4)
         return prob
 
 def weight_variable(shape):
-    initial = tf.truncated_normal([int(shape[0]),int(shape[1])], stddev=0.1)
+    in_dim = shape[0]
+    xavier_stddev = 1. / tf.sqrt(in_dim / 2.)
+    initial = tf.random_normal(shape, stddev=xavier_stddev)
     return tf.Variable(initial)
 
 def bias_variable(shape):
@@ -41,7 +37,6 @@ def plot(samples):
     fig = plt.figure(figsize=(4, 4))
     gs = gridspec.GridSpec(4, 4)
     gs.update(wspace=0.05, hspace=0.05)
-
     for j, sample in enumerate(samples):
         ax = plt.subplot(gs[j])
         plt.axis('off')
@@ -49,7 +44,6 @@ def plot(samples):
         ax.set_yticklabels([])
         ax.set_aspect('equal')
         plt.imshow(sample.reshape(28, 28), cmap='Greys_r')
-
     return fig
 
 def main():
@@ -69,13 +63,9 @@ def main():
         d_loss = d_loss_real + d_loss_fake
         g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake, labels=tf.ones_like(d_logits_fake)))
 
-    train_var = tf.trainable_variables()
-    d_var = [var for var in train_var if 'discriminator' in var.name]
-    g_var = [var for var in train_var if 'generator' in var.name]
-
     with tf.name_scope('adam_optimizer'):
-        d_train = tf.train.AdamOptimizer().minimize(d_loss, var_list=d_var)
-        g_train = tf.train.AdamOptimizer().minimize(g_loss, var_list=g_var)
+        d_train = tf.train.AdamOptimizer().minimize(d_loss, var_list=d_var_list)
+        g_train = tf.train.AdamOptimizer().minimize(g_loss, var_list=g_var_list)
 
     with tf.Session() as sess:
          sess.run(tf.global_variables_initializer())
@@ -90,7 +80,7 @@ def main():
                  print('Iteration: {}'.format(i))
                  print('discriminator loss: {:.4}'.format(d_loss_curr))
                  print('Generator loss: {:.4}'.format(g_loss_curr))
-                 print()
+                 print('')
 
                  num_sample = 16
                  z_sample = np.random.uniform(-1., 1., [num_sample, 100])
@@ -102,4 +92,16 @@ def main():
                  plt.close(fig)
                  j+=1
 
-if __name__ == '__main__': main()
+
+if __name__ == '__main__':
+    W_fc1 = weight_variable([794, 128])
+    b_fc1 = bias_variable([128])
+    W_fc2 = weight_variable([128, 1])
+    b_fc2 = bias_variable([1])
+    W_fc3 = weight_variable([110, 128])
+    b_fc3 = bias_variable([128])
+    W_fc4 = weight_variable([128,784])
+    b_fc4 = bias_variable([784])
+    d_var_list = [W_fc1,W_fc2,b_fc1,b_fc2]
+    g_var_list = [W_fc3,W_fc4,b_fc3,b_fc4]
+    main()
