@@ -54,8 +54,10 @@ def main():
     g = generator(z,c)
     d_real,d_logits_real = discriminator(x,c)
     d_fake,d_logits_fake = discriminator(g,c)
-    if not os.path.exists('gan_iamges/'):
+    if not os.path.exists('gan_images/'):
         os.makedirs('gan_images/')
+    if not os.path.exists('out_images/'):
+        os.makedirs('out_images/')
 
     with tf.name_scope('loss'):
         d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_real, labels=tf.ones_like(d_logits_real)))
@@ -91,6 +93,17 @@ def main():
                  plt.savefig('gan_images/{}.png'.format(str(i).zfill(3)), bbox_inches='tight')
                  plt.close(fig)
                  j+=1
+         saver.save(sess,'model/')
+         for i in range(10):
+             num_sample = 16
+             z_sample = np.random.uniform(-1., 1., [num_sample, 100])
+             c_sample = np.zeros(shape=[num_sample,10])
+             c_sample[:,i] = 1
+             images = sess.run(g, feed_dict={z: z_sample, c:c_sample})
+             fig = plot(images)
+             plt.savefig('out_images/{}.png'.format(str(i).zfill(3)), bbox_inches='tight')
+             plt.close(fig)
+             j+=1
 
 
 if __name__ == '__main__':
@@ -104,4 +117,5 @@ if __name__ == '__main__':
     b_fc4 = bias_variable([784])
     d_var_list = [W_fc1,W_fc2,b_fc1,b_fc2]
     g_var_list = [W_fc3,W_fc4,b_fc3,b_fc4]
+    saver = tf.train.Saver()
     main()
