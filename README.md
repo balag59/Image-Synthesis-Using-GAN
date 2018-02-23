@@ -1,2 +1,2 @@
 # IMAGE SYNTHESIS USING GAN
-Repository with demonstrations and implementations of different GAN architectures
+An end to end model that can synthesize images from a given text using stacked GAN’s (Generative Adversarial Networks).
