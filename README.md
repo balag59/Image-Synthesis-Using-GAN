@@ -5,6 +5,7 @@ There are currently two GAN architectures in this repository, and both work on t
 # Conditional GAN using fully connected layers only:
 # gan_fc.py
 This is a conditional GAN that can generate the desired hand-written digit from 0 to 9.
+#
 
 # Vannila GAN
 # gan_vanilla.py
